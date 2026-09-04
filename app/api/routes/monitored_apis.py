@@ -98,3 +98,27 @@ def get_checks(
     """View recent check history for this API."""
     api_service.get_owned_api_or_404(db, current_user, api_id)  # ownership check
     return check_repository.list_checks_for_api(db, api_id, limit)
+
+from app.schemas.metrics import ApiMetrics, ApiStatus
+from app.services import metrics_service
+
+# ... (keep everything above, then add:)
+
+@router.get("/{api_id}/metrics", response_model=ApiMetrics)
+def get_metrics(
+    api_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    api_service.get_owned_api_or_404(db, current_user, api_id)
+    return metrics_service.calculate_metrics(db, api_id)
+
+
+@router.get("/{api_id}/status", response_model=ApiStatus)
+def get_status(
+    api_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    api = api_service.get_owned_api_or_404(db, current_user, api_id)
+    return metrics_service.get_current_status(db, api)
