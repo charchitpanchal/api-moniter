@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.core.config import settings
-from app.api.routes import auth
+from app.api.routes import auth, monitored_apis
 
 app = FastAPI(
     title=settings.app_name,
@@ -9,6 +9,7 @@ app = FastAPI(
 )
 
 app.include_router(auth.router)
+app.include_router(monitored_apis.router)
 
 
 @app.get("/health", tags=["Health"])
