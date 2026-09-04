@@ -70,3 +70,31 @@ def disable_monitoring(
     current_user: User = Depends(get_current_user),
 ):
     return api_service.set_monitoring_active(db, current_user, api_id, False)
+
+from app.schemas.api_check import ApiCheckOut
+from app.services import monitoring_service
+from app.repositories import check_repository
+
+# ... (keep all existing code above, then add:)
+
+@router.post("/{api_id}/check-now", response_model=ApiCheckOut)
+async def check_now(
+    api_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Manually trigger a single health check against this API right now."""
+    api = api_service.get_owned_api_or_404(db, current_user, api_id)
+    return await monitoring_service.run_check_for_api(db, api)
+
+
+@router.get("/{api_id}/checks", response_model=list[ApiCheckOut])
+def get_checks(
+    api_id: int,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """View recent check history for this API."""
+    api_service.get_owned_api_or_404(db, current_user, api_id)  # ownership check
+    return check_repository.list_checks_for_api(db, api_id, limit)
