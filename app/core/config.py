@@ -17,6 +17,11 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://localhost:6379/0"
 
+    ai_provider: str = "openai"
+    ai_api_key: str = ""
+    ai_model: str = "gpt-4o-mini"
+    ai_enabled: bool = True
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
