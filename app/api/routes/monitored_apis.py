@@ -118,3 +118,44 @@ async def get_status(
 ):
     api = api_service.get_owned_api_or_404(db, current_user, api_id)
     return await metrics_service.get_current_status(db, api)
+
+from app.schemas.anomaly import AnomalyDetectionResult, AnomalyCheck
+from app.ml.anomaly_detector import detect_anomalies
+
+# ... (keep everything above, then add:)
+
+@router.get("/{api_id}/anomalies", response_model=AnomalyDetectionResult)
+def get_anomalies(
+    api_id: int,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Runs anomaly detection on this API's recent response times.
+    Flags statistically unusual latency, independent of pass/fail status.
+    """
+    api_service.get_owned_api_or_404(db, current_user, api_id)
+    checks = check_repository.list_checks_for_api(db, api_id, limit)
+
+    results = detect_anomalies(checks)
+
+    anomaly_checks = [
+        AnomalyCheck(
+            check_id=check.id,
+            checked_at=check.checked_at,
+            response_time=check.response_time,
+            status_code=check.status_code,
+            success=check.success,
+            is_anomaly=is_anomaly,
+        )
+        for check, is_anomaly in results
+        if is_anomaly
+    ]
+
+    return AnomalyDetectionResult(
+        api_id=api_id,
+        total_checks_analyzed=len(checks),
+        anomalies_found=len(anomaly_checks),
+        anomalies=anomaly_checks,
+    )

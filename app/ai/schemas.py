@@ -3,10 +3,6 @@ from typing import List
 
 
 class IncidentContext(BaseModel):
-    """
-    Structured input describing an incident, built from database records.
-    This is what gets turned into a prompt — never send raw DB objects to an LLM.
-    """
     api_name: str
     api_url: str
     expected_status_code: int
@@ -18,13 +14,13 @@ class IncidentContext(BaseModel):
 
 
 class AIAnalysisResult(BaseModel):
-    """
-    The structured, validated output we require from the LLM.
-    If the LLM's response doesn't match this shape, we treat it as a failure —
-    we never store or trust unvalidated free-text from the model.
-    """
     severity: str = Field(description="One of LOW, MEDIUM, HIGH, CRITICAL")
     probable_cause: str
     evidence: List[str]
     recommendation: List[str]
+    summary: str
+
+
+class SummaryResult(BaseModel):
+    """Lightweight output for the summarization feature — just plain text."""
     summary: str

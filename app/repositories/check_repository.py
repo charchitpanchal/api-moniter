@@ -25,3 +25,12 @@ def list_checks_for_api(db: Session, api_id: int, limit: int = 50) -> list[ApiCh
         .limit(limit)
         .all()
     )
+
+def list_recent_checks_for_api(db, api_id: int, limit: int = 100) -> list[ApiCheck]:
+    return (
+        db.query(ApiCheck)
+        .filter(ApiCheck.api_id == api_id)
+        .order_by(ApiCheck.checked_at.desc())
+        .limit(limit)
+        .all()
+    )

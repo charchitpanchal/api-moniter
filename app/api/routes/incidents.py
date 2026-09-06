@@ -75,3 +75,29 @@ def get_analysis(
     """Retrieves the most recent AI analysis for this incident, if one exists."""
     _get_owned_incident_or_404(db, current_user, incident_id)  # ownership check
     return ai_analysis_service.get_latest_analysis_or_404(db, incident_id)
+
+
+from fastapi import HTTPException, status as http_status
+from app.ai.context_builder import build_incident_context
+from app.ai.service import summarize_incident
+
+# ... (keep all existing imports and routes above, then add:)
+
+@router.get("/{incident_id}/summary")
+async def get_incident_summary(
+    incident_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Generates a short plain-English summary of this incident on demand."""
+    incident = _get_owned_incident_or_404(db, current_user, incident_id)
+    context = build_incident_context(db, incident)
+    result = await summarize_incident(context)
+
+    if result is None:
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="AI summary is currently unavailable. Please try again later.",
+        )
+
+    return {"incident_id": incident_id, "summary": result.summary}
