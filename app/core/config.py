@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     default_retry_delay_seconds: int = 2
     failure_threshold: int = 3
 
+    redis_url: str = "redis://localhost:6379/0"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

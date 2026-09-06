@@ -3,9 +3,10 @@ from sqlalchemy import func
 from app.models.api_check import ApiCheck
 from app.schemas.metrics import ApiMetrics, ApiStatus
 from app.models.monitored_api import MonitoredApi
+from app.cache import cache
 
 
-def calculate_metrics(db: Session, api_id: int) -> ApiMetrics:
+def _calculate_metrics_from_db(db: Session, api_id: int) -> ApiMetrics:
     checks = db.query(ApiCheck).filter(ApiCheck.api_id == api_id).all()
 
     total = len(checks)
@@ -46,7 +47,17 @@ def calculate_metrics(db: Session, api_id: int) -> ApiMetrics:
     )
 
 
-def get_current_status(db: Session, api: MonitoredApi) -> ApiStatus:
+async def calculate_metrics(db: Session, api_id: int) -> ApiMetrics:
+    cached = await cache.get_cached_metrics(api_id)
+    if cached is not None:
+        return ApiMetrics(**cached)
+
+    metrics = _calculate_metrics_from_db(db, api_id)
+    await cache.set_cached_metrics(api_id, metrics.model_dump())
+    return metrics
+
+
+def _get_current_status_from_db(db: Session, api: MonitoredApi) -> ApiStatus:
     last_check = (
         db.query(ApiCheck)
         .filter(ApiCheck.api_id == api.id)
@@ -68,3 +79,13 @@ def get_current_status(db: Session, api: MonitoredApi) -> ApiStatus:
         last_checked_at=last_check.checked_at.isoformat() if last_check else None,
         current_status=current_status,
     )
+
+
+async def get_current_status(db: Session, api: MonitoredApi) -> ApiStatus:
+    cached = await cache.get_cached_status(api.id)
+    if cached is not None:
+        return ApiStatus(**cached)
+
+    status_obj = _get_current_status_from_db(db, api)
+    await cache.set_cached_status(api.id, status_obj.model_dump())
+    return status_obj
