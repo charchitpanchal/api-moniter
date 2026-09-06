@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
 
+    default_max_retries: int = 3
+    default_retry_delay_seconds: int = 2
+    failure_threshold: int = 3
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
