@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     ai_model: str = "gpt-4o-mini"
     ai_enabled: bool = True
     notification_provider: str = "console"
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
