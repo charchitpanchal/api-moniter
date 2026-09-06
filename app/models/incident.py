@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime
-from sqlalchemy import Integer, String, Enum, DateTime, ForeignKey, Float
+from sqlalchemy import Integer, String, Enum, DateTime, ForeignKey, Float, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.database import Base
 
@@ -32,6 +32,8 @@ class Incident(Base):
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
     resolution_time: Mapped[float | None] = mapped_column(Float, nullable=True)
+
+    notified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

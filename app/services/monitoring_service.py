@@ -12,9 +12,9 @@ async def run_check_for_api(db: Session, api: MonitoredApi):
     check = check_repository.create_check(db, api.id, result)
 
     if result.success:
-        incident_service.handle_successful_check(db, api)
+        await incident_service.handle_successful_check(db, api)
     else:
-        incident_service.handle_failed_check(db, api, result.error_message, result.response_time)
+        await incident_service.handle_failed_check(db, api, result.error_message, result.response_time)
 
     await cache.invalidate_status(api.id)  # status just changed -> force fresh read next time
 

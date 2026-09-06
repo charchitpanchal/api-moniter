@@ -6,21 +6,18 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = True
     database_url: str
-
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60
-
     default_max_retries: int = 3
     default_retry_delay_seconds: int = 2
     failure_threshold: int = 3
-
     redis_url: str = "redis://localhost:6379/0"
-
     ai_provider: str = "openai"
     ai_api_key: str = ""
     ai_model: str = "gpt-4o-mini"
     ai_enabled: bool = True
+    notification_provider: str = "console"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

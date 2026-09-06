@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.monitored_api import MonitoredApi
 from app.models.incident import IncidentSeverity
 from app.repositories import incident_repository
+from app.notifications.service import notify_if_needed
 
 logger = logging.getLogger("services.incident")
 
@@ -24,7 +25,7 @@ def determine_severity(failure_count: int, response_time: float | None, api: Mon
     return IncidentSeverity.LOW
 
 
-def handle_failed_check(db: Session, api: MonitoredApi, error_message: str, response_time: float | None):
+async def handle_failed_check(db: Session, api: MonitoredApi, error_message: str, response_time: float | None):
     """
     Called when a check has failed after all retries.
     Creates a new incident, or updates the existing OPEN one (deduplication).
@@ -35,7 +36,6 @@ def handle_failed_check(db: Session, api: MonitoredApi, error_message: str, resp
         severity = determine_severity(1, response_time, api)
         incident = incident_repository.create_incident(db, api.id, severity, error_message)
         logger.warning(f"NEW incident #{incident.id} created for API id={api.id} ({api.name})")
-        return incident
     else:
         new_failure_count = existing.failure_count + 1
         severity = determine_severity(new_failure_count, response_time, api)
@@ -44,10 +44,12 @@ def handle_failed_check(db: Session, api: MonitoredApi, error_message: str, resp
             f"Incident #{incident.id} updated for API id={api.id} "
             f"(failure_count={incident.failure_count}, severity={incident.severity})"
         )
-        return incident
+
+    await notify_if_needed(db, incident)
+    return incident
 
 
-def handle_successful_check(db: Session, api: MonitoredApi):
+async def handle_successful_check(db: Session, api: MonitoredApi):
     """
     Called when a check succeeds. If there's an open incident for this API,
     resolve it — the outage is over.
@@ -60,5 +62,6 @@ def handle_successful_check(db: Session, api: MonitoredApi):
             f"Incident #{incident.id} RESOLVED for API id={api.id} "
             f"(duration={incident.resolution_time}s)"
         )
+        await notify_if_needed(db, incident)
         return incident
     return None
