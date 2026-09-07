@@ -159,3 +159,22 @@ def get_anomalies(
         anomalies_found=len(anomaly_checks),
         anomalies=anomaly_checks,
     )
+
+@router.post(
+    "",
+    response_model=MonitoredApiOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Register a new API to monitor",
+    responses={
+        201: {"description": "Monitored API created successfully"},
+        422: {"description": "Validation error (invalid URL, method, or status code)"},
+        429: {"description": "Rate limit exceeded"},
+    },
+)
+async def create_monitored_api(
+    payload: MonitoredApiCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    await check_rate_limit(f"rate_limit:create_api:{current_user.id}", max_requests=10, window_seconds=60)
+    return api_service.create_monitored_api(db, current_user, payload)

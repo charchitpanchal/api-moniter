@@ -15,6 +15,19 @@ class MonitoredApiCreate(BaseModel):
     headers: Optional[dict] = None
     request_body: Optional[dict] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Payment Service",
+                "url": "https://api.example.com/payment/health",
+                "method": "GET",
+                "expected_status_code": 200,
+                "monitoring_interval": 60,
+                "timeout": 5,
+            }
+        }
+    }
+
     @field_validator("method")
     @classmethod
     def validate_method(cls, v: str) -> str:
@@ -22,7 +35,6 @@ class MonitoredApiCreate(BaseModel):
         if v not in VALID_METHODS:
             raise ValueError(f"method must be one of {VALID_METHODS}")
         return v
-
 
 class MonitoredApiUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=150)

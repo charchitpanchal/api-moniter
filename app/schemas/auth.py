@@ -8,6 +8,16 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
 
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "name": "Jane Doe",
+                "email": "jane@example.com",
+                "password": "securepassword123",
+            }
+        }
+    }
+
 
 class UserLogin(BaseModel):
     email: EmailStr

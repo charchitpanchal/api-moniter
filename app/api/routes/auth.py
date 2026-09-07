@@ -7,8 +7,7 @@ from app.api.dependencies import get_current_user
 from app.models.user import User
 from app.cache.rate_limiter import check_rate_limit
 
-router = APIRouter(prefix="/api/auth", tags=["Auth"])
-
+router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 @router.post("/register", response_model=UserOut, status_code=201)
 def register(payload: UserRegister, db: Session = Depends(get_db)):
