@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+.pytest_cache/
+tests/
+alembic/versions/__pycache__/
+*.md
+.vscode/

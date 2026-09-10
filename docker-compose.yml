@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: api-monitor-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: api_monitor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"   # host:container — 5433 avoids clashing with your local Postgres on 5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: api-monitor-redis-compose
+    restart: unless-stopped
+    ports:
+      - "6380:6379"   # host:container — 6380 avoids clashing with your existing redis container
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: api-monitor-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@postgres:5432/api_monitor
+      REDIS_URL: redis://redis:6379/0
+      APP_NAME: ${APP_NAME}
+      ENVIRONMENT: ${ENVIRONMENT}
+      DEBUG: ${DEBUG}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: ${JWT_ACCESS_TOKEN_EXPIRE_MINUTES}
+      DEFAULT_MAX_RETRIES: ${DEFAULT_MAX_RETRIES}
+      DEFAULT_RETRY_DELAY_SECONDS: ${DEFAULT_RETRY_DELAY_SECONDS}
+      FAILURE_THRESHOLD: ${FAILURE_THRESHOLD}
+      AI_PROVIDER: ${AI_PROVIDER}
+      AI_API_KEY: ${AI_API_KEY}
+      AI_MODEL: ${AI_MODEL}
+      AI_ENABLED: ${AI_ENABLED}
+      NOTIFICATION_PROVIDER: ${NOTIFICATION_PROVIDER}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:
