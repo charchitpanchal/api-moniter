@@ -11,7 +11,7 @@ export function useMonitoredApis() {
   return useQuery({
     queryKey: ["monitoredApis"],
     queryFn: listMonitoredApis,
-    refetchInterval: 10000,
+    refetchInterval: 15000,
   });
 }
 
