@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Incidents from "./pages/Incidents";
+import ApiDetail from "./pages/ApiDetail";
 import type { ReactNode } from "react";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -18,6 +19,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/incidents" element={<ProtectedRoute><Incidents /></ProtectedRoute>} />
+      <Route path="/apis/:id" element={<ProtectedRoute><ApiDetail /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Link } from "react-router-dom";
 import {
   useMonitoredApis,
   useCreateMonitoredApi,
@@ -88,7 +89,9 @@ export default function MonitoredApis() {
           <tbody>
             {apis?.map((api) => (
               <tr key={api.id} className="border-t">
-                <td className="p-3">{api.name}</td>
+                <td className="p-3">
+                  <Link to={`/apis/${api.id}`} className="text-blue-600">{api.name}</Link>
+                </td>
                 <td className="p-3 text-sm text-gray-600">{api.url}</td>
                 <td className="p-3">{api.method}</td>
                 <td className="p-3">{api.monitoring_interval}s</td>
