@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     ai_enabled: bool = True
     notification_provider: str = "console"
     allowed_origins: str = "http://localhost:3000,http://localhost:5173"
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    notify_email_to: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
