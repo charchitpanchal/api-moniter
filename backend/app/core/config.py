@@ -23,7 +23,6 @@ class Settings(BaseSettings):
     smtp_port: int = 587
     smtp_user: str = ""
     smtp_password: str = ""
-    notify_email_to: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

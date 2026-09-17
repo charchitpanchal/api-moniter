@@ -39,17 +39,17 @@ class ConsoleNotifier(NotificationProvider):
 
 
 class EmailNotifier(NotificationProvider):
-    def _send_email(self, subject: str, body: str) -> bool:
+    def _send_email(self, to_email: str, subject: str, body: str) -> bool:
         try:
             msg = MIMEText(body)
             msg["Subject"] = subject
             msg["From"] = settings.smtp_user
-            msg["To"] = settings.notify_email_to
+            msg["To"] = to_email
 
             with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as server:
                 server.starttls()
                 server.login(settings.smtp_user, settings.smtp_password)
-                server.sendmail(settings.smtp_user, settings.notify_email_to, msg.as_string())
+                server.sendmail(settings.smtp_user, to_email, msg.as_string())
             return True
         except Exception as e:
             logger.error(f"Email send failed: {e}")
@@ -57,6 +57,7 @@ class EmailNotifier(NotificationProvider):
 
     async def send_incident_alert(self, incident: Incident) -> bool:
         api = incident.api
+        recipient = api.owner.email
         subject = f"CRITICAL Incident - {api.name}"
         body = (
             f"API: {api.name} ({api.url})\n"
@@ -65,17 +66,18 @@ class EmailNotifier(NotificationProvider):
             f"Last Error: {incident.last_error}\n"
             f"Started At: {incident.started_at}"
         )
-        return self._send_email(subject, body)
+        return self._send_email(recipient, subject, body)
 
     async def send_recovery_alert(self, incident: Incident) -> bool:
         api = incident.api
+        recipient = api.owner.email
         subject = f"Recovered - {api.name}"
         body = (
             f"API: {api.name}\n"
             f"Downtime: {incident.resolution_time}s\n"
             f"Resolved At: {incident.resolved_at}"
         )
-        return self._send_email(subject, body)
+        return self._send_email(recipient, subject, body)
 
 
 def get_notification_provider() -> NotificationProvider:
