@@ -5,7 +5,6 @@ __pycache__/
 .gitignore
 .env
 .pytest_cache/
-tests/
 alembic/versions/__pycache__/
 *.md
 .vscode/

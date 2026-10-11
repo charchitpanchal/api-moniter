@@ -4,10 +4,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_URL"] = os.environ.get(
-    "TEST_DATABASE_URL",
-    "postgresql+psycopg2://postgres:chinu123@localhost:5432/api_monitor_test",
-)
+test_database_url = os.environ.get("TEST_DATABASE_URL")
+if not test_database_url:
+    raise RuntimeError("TEST_DATABASE_URL must be set to a dedicated test database")
+
+os.environ["DATABASE_URL"] = test_database_url
 
 from app.main import app
 from app.db.database import Base, get_db
