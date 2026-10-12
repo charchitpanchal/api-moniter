@@ -1,5 +1,5 @@
 
-name: Backend CI
+name: Backend CI and ECR Publish
 
 on:
   push:
@@ -38,6 +38,7 @@ jobs:
     env:
       TEST_DATABASE_URL: postgresql+psycopg2://postgres:ci_test_password@localhost:5432/api_monitor_test
       JWT_SECRET_KEY: ci-only-test-secret-not-for-production
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -60,4 +61,36 @@ jobs:
         run: pytest -v
 
       - name: Build Docker image
-        run: docker build -t api-monitor-backend:ci ./backend
+        run: docker build -t api-monitor-backend:${{ github.sha }} ./backend
+
+  publish-to-ecr:
+    needs: test-and-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" ./backend
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
